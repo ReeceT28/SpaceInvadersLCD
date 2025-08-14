@@ -11,7 +11,7 @@ typedef struct
     volatile uint8_t *ddr;
     uint8_t db4, db5, db6, db7;
     uint8_t e, rs;
-    int cols;
+    uint8_t cols;
 } LCD;
 
 void LCD_create(LCD *lcd,

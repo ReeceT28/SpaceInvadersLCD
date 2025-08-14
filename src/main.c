@@ -1,5 +1,6 @@
 #include "lcd.h"
-#include <util/delay.h>
+#include "delay.h"
+#include <avr/delay.h>
 #define MAX_BULLETS 4
 #define MAX_ENEMIES 8
 #define FRAME_PERIOD 10
@@ -251,6 +252,7 @@ void drawPlayer()
     LCD_writeData(&lcd, 0x01);
 }
 
+
 // Setup function to initialize LCD
 void setup() 
 {
@@ -285,10 +287,13 @@ void setup()
 
     LCD_createCustomChar(&lcd, 0x06, invaderLeft);
     LCD_createCustomChar(&lcd, 0x07, invaderRight);
+    
+
 
     // Analog read setup
     ADMUX|=(1<<REFS0); //set ADC reference to AVcc (5V)
     ADCSRA|=(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0)|(1<<ADEN); //ADPS bits set prescaler (128) ADEN enables the ADC
+
 }
 
 // Empty loop function (can be expanded if needed)
@@ -322,7 +327,7 @@ void loop()
 
     drawPlayer();
 
-    _delay_ms(FRAME_PERIOD);
+    delayMs(FRAME_PERIOD);
     frameCount++;
 }
 

@@ -1,5 +1,5 @@
 #include "lcd.h"
-#include <util/delay.h>
+#include "delay.h"
 
 char* intToString(uint16_t num) 
 {
@@ -39,9 +39,9 @@ void LCD_sendNibble(LCD *lcd, uint8_t data)
     if (data & 0x08) *(lcd->port) |= (1 << lcd->db7); else *(lcd->port) &= ~(1 << lcd->db7); //set D7
 
     *(lcd->port) |= (1 << lcd->e); //pulse E on
-    _delay_us(50); // Short delay to latch the data
+    delayUs(50); // Short delay to latch the data
     *(lcd->port) &= ~(1 << lcd->e); //turn E off
-    _delay_us(50); // Short delay after pulsing
+    delayUs(50); // Short delay after pulsing
 }
 
 void LCD_writeCmd(LCD *lcd, uint8_t cmd)
@@ -78,24 +78,24 @@ void LCD_init(LCD *lcd)
 {
 
     *(lcd->ddr) |= (1<<lcd->db4) | (1<<lcd->db5) | (1<<lcd->db6) | (1<<lcd->db7) | (1<<lcd->e) | (1<<lcd->rs);
-    _delay_ms(50); // Initial delay for LCD power-up
+    delayMs(50); // Initial delay for LCD power-up
 
     LCD_writeCmd(lcd, 0x33); // Initialize for 4-bit mode (3 times as per spec)
-    _delay_ms(5);
+    delayMs(5);
     LCD_writeCmd(lcd, 0x32); // Set to 4-bit mode
-    _delay_ms(5);
+    delayMs(5);
 
     LCD_writeCmd(lcd, 0x28); // 2 lines, 5x7 matrix
-    _delay_ms(2);
+    delayMs(5);
 
     LCD_writeCmd(lcd, 0x0C); // Display on, cursor off
-    _delay_ms(2);
+    delayMs(5);
 
     LCD_writeCmd(lcd, 0x06); // Increment cursor
-    _delay_ms(2);
+    delayMs(5);
 
     LCD_writeCmd(lcd, 0x01); // Clear display
-    _delay_ms(2);
+    delayMs(5);
 }
 
 void LCD_scrollRight(LCD *lcd)
