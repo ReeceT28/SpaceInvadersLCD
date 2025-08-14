@@ -25,12 +25,11 @@ void LCD_writeCmd(LCD *lcd, uint8_t cmd);
 void LCD_writeData(LCD *lcd, uint8_t data);
 void LCD_writeString(LCD *lcd, const char *str);
 void LCD_init(LCD *lcd);
-void LCD_update(LCD *lcd, int xValue, int yValue, int potValue);
 void LCD_scrollRight(LCD *lcd);
 void LCD_scrollLeft(LCD *lcd);
-void LCD_createCustomChar(LCD *lcd, uint8_t location, uint8_t bitmap[]);
-void LCD_setCursorPos(LCD *lcd, int xPos, int yPos);
+void LCD_createCustomChar(LCD *lcd, uint8_t location, const uint8_t bitmap[]);
+void LCD_setCursorPos(LCD *lcd, const uint8_t xPos, const uint8_t yPos);
 
-char* intToString(int num);
+char* intToString(uint16_t num);
 
 #endif

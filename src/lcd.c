@@ -1,7 +1,7 @@
 #include "lcd.h"
 #include <util/delay.h>
 
-char* intToString(int num) 
+char* intToString(uint16_t num) 
 {
     static char bum[5];  // Static buffer to hold the string, including null terminator
 
@@ -98,18 +98,6 @@ void LCD_init(LCD *lcd)
     _delay_ms(2);
 }
 
-void LCD_update(LCD *lcd, int xValue, int yValue, int potValue)
-{
-    LCD_writeCmd(lcd, 0x82); // Move to position after X:
-    LCD_writeString(lcd, intToString(xValue));
-
-    LCD_writeCmd(lcd, 0x89); // position after Y:
-    LCD_writeString(lcd, intToString(yValue));
-
-    LCD_writeCmd(lcd, 0xC4); // position after Pot:
-    LCD_writeString(lcd, intToString(potValue));
-}
-
 void LCD_scrollRight(LCD *lcd)
 {
     LCD_writeCmd(lcd, 0x1F);
@@ -120,7 +108,7 @@ void LCD_scrollLeft(LCD *lcd)
     LCD_writeCmd(lcd, 0x18);
 }
 
-void LCD_createCustomChar(LCD *lcd, uint8_t location, uint8_t bitmap[]) 
+void LCD_createCustomChar(LCD *lcd, uint8_t location, const uint8_t bitmap[]) 
 {
     // If any location other than 0-7 is used then not valid so essentially clamp in this range
     location &= 0x07; 
@@ -134,7 +122,7 @@ void LCD_createCustomChar(LCD *lcd, uint8_t location, uint8_t bitmap[])
     }
 }
 
-void LCD_setCursorPos(LCD *lcd, int xPos, int yPos)
+void LCD_setCursorPos(LCD *lcd, const uint8_t xPos, const uint8_t yPos)
 {
     if(yPos == 0)
     {

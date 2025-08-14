@@ -2,11 +2,11 @@
 #include <util/delay.h>
 #define MAX_BULLETS 4
 #define MAX_ENEMIES 8
-#define FRAME_PERIOD 120
+#define FRAME_PERIOD 10
 // LCD instance
 LCD lcd;
 
-uint8_t basePlayer[8] = {
+const uint8_t basePlayer[8] = {
     0b00011000,
     0b00011100,
     0b00011100,
@@ -44,21 +44,21 @@ uint8_t invaderSpeed =1 ;
 // height ranges from 0-9
 uint8_t height = 0;
 uint8_t bulletSpeed = 1; 
-uint8_t frameCount= 0;
-uint8_t lastFire  = 0;
-uint8_t lastInvader =0;
+uint16_t frameCount = 0;
+uint16_t lastFire = 0;
+uint16_t lastInvader = 0;
 
-int8_t bulletX[MAX_BULLETS] = {-1,-1,-1,-1}; // -1 = inactive
-uint8_t bulletRow[MAX_BULLETS] = {0};
+uint8_t bulletX[MAX_BULLETS]; // 0xff = inactive
+uint8_t bulletRow[MAX_BULLETS];
 
-int8_t invaderX[MAX_ENEMIES];      // -1 = inactive
+uint8_t invaderX[MAX_ENEMIES];      // 0xff = inactive
 uint8_t invaderRow[MAX_ENEMIES];    // row of each invader
 
 void spawnInvader()
 {
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
-        if (invaderX[i] == -1) // find inactive slot
+        if (invaderX[i] == 0xff) // find inactive slot
         {
             // Spawn position: top row, leftmost column
             invaderX[i] = 17;    // start at far right
@@ -84,13 +84,13 @@ void updateInvaders()
         LCD_writeData(&lcd,0b00100000);
         LCD_setCursorPos(&lcd, invaderX[i]+1, invaderRow[i]);
         LCD_writeData(&lcd,0b00100000);
-        if(invaderX[i] >= 1)
+        if(invaderX[i] >= 1 && invaderX[i] < 0xff)
         {
             invaderX[i] -= invaderSpeed;
         }
         else
         {
-            invaderX[i]=-1;
+            invaderX[i]=0xff;
         }
     }   
 }
@@ -99,7 +99,7 @@ void drawInvader()
 {
     for(int i=0 ; i<MAX_ENEMIES; i++)
     {
-        if(invaderX[i]!=-1)
+        if(invaderX[i]!=0xff)
         {
             LCD_setCursorPos(&lcd, invaderX[i], invaderRow[i]);
             LCD_writeData(&lcd, 0x06);
@@ -114,7 +114,7 @@ void fireBullet()
 {
     for (int i = 0; i < MAX_BULLETS; i++) 
     {
-        if (bulletX[i] == -1) 
+        if (bulletX[i] == 0xff) 
         {
             uint8_t bulletSprite[8] = {
                     0b00000000,
@@ -150,13 +150,13 @@ void updateBullets()
         // Remove old bullet
         LCD_setCursorPos(&lcd, bulletX[i], bulletRow[i]);
         LCD_writeData(&lcd,0b00100000);
-        if(bulletX[i] != -1)
+        if(bulletX[i] != 0xff)
         {
             bulletX[i] += bulletSpeed;
         }
         if(bulletX[i] > 15)
         {
-            bulletX[i]=-1;
+            bulletX[i]=0xff;
         }
     }
 }
@@ -165,7 +165,7 @@ void drawBullets()
 {
     for(int i=0 ; i < MAX_BULLETS ; i++)
     {
-        if(bulletX[i] !=-1)
+        if(bulletX[i] !=0xff)
         {
             LCD_setCursorPos(&lcd, bulletX[i],bulletRow[i]);
             LCD_writeData(&lcd, 2+ i);
@@ -177,18 +177,24 @@ void checkHit()
 {
     for(int i=0; i<MAX_BULLETS ; i++)
     {
-        for(int j =0 ; j <MAX_ENEMIES; j++)
+        if(bulletX[i] != 0xff)
         {
-            if(((bulletX[i] == invaderX[j]) || (bulletX[i] == invaderX[j]+1)) && (bulletRow[i] == invaderRow[j]))
+            for(int j =0 ; j <MAX_ENEMIES; j++)
             {
-                LCD_setCursorPos(&lcd, bulletX[i], bulletRow[i]);
-                LCD_writeData(&lcd,0b00100000);
-                LCD_setCursorPos(&lcd, invaderX[i], invaderRow[i]);
-                LCD_writeData(&lcd,0b00100000);
-                LCD_setCursorPos(&lcd, invaderX[i]+1, invaderRow[i]);
-                LCD_writeData(&lcd,0b00100000);
-                bulletX[i]=-1;
-                invaderX[j]= -1;
+                if (invaderX[j] != 0xFF) 
+                {
+                    if(((bulletX[i] == invaderX[j]) || (bulletX[i] == invaderX[j]+1)) && (bulletRow[i] == invaderRow[j]))
+                    {
+                        LCD_setCursorPos(&lcd, bulletX[i], bulletRow[i]);
+                        LCD_writeData(&lcd,0b00100000);
+                        LCD_setCursorPos(&lcd, invaderX[j], invaderRow[j]);
+                        LCD_writeData(&lcd,0b00100000);
+                        LCD_setCursorPos(&lcd, invaderX[j]+1, invaderRow[j]);
+                        LCD_writeData(&lcd,0b00100000);
+                        bulletX[i]=0xff;
+                        invaderX[j]= 0xff;
+                    }
+                }
             }
         }
     }
@@ -251,7 +257,11 @@ void setup()
 
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
-        invaderX[i] = -1;
+        invaderX[i] = 0xff;
+    }
+    for(int i=0; i< MAX_BULLETS; i++)
+    {
+        bulletX[i] = 0xff;
     }
     uint8_t DB4IO = DDB1;
     uint8_t DB5IO = DDB2;
@@ -287,22 +297,25 @@ void loop()
     ADMUX|=(1<<MUX2) | (1<<MUX0); // A5 set as ADC reading for X axis of joystick
     ADCSRA|=(1<<ADSC); // begin convertion
     while(ADCSRA & (1<<ADSC)); // wait 
-    int xValue=ADC; 
+    int16_t xValue=ADC; 
 
-    height = (xValue/1023.0f) * 9;
+    height = (xValue * 9) / 1023;
 
-    if(frameCount - lastFire > 5)
+    if(frameCount - lastFire > 50)
     {
         lastFire = frameCount;
         fireBullet();
     }
-    if(frameCount - lastInvader >10)
+    if(frameCount - lastInvader >100)
     {
         lastInvader = frameCount;
         spawnInvader();
     }
-    updateBullets();
-    updateInvaders();
+    if(frameCount%6==0)
+    {
+        updateBullets();
+        updateInvaders();
+    }
     checkHit();
     drawBullets();
     drawInvader();
@@ -316,11 +329,11 @@ void loop()
 // Main function
 int main(void)
 {
-    setup();  // Initialize and display the message
+    setup(); 
 
     while (1)
     {
-        loop(); // Run loop (currently empty)
+        loop(); 
     }
 
     return 0; // End of program
