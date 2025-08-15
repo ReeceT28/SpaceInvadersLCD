@@ -37,7 +37,7 @@ void LCD_sendNibble(LCD *lcd, uint8_t data)
     if (data & 0x02) *(lcd->port) |= (1 << lcd->db5); else *(lcd->port) &= ~(1 << lcd->db5); //set D5
     if (data & 0x04) *(lcd->port) |= (1 << lcd->db6); else *(lcd->port) &= ~(1 << lcd->db6); //set D6
     if (data & 0x08) *(lcd->port) |= (1 << lcd->db7); else *(lcd->port) &= ~(1 << lcd->db7); //set D7
-
+    
     *(lcd->port) |= (1 << lcd->e); //pulse E on
     delayUs(50); // Short delay to latch the data
     *(lcd->port) &= ~(1 << lcd->e); //turn E off
@@ -98,16 +98,6 @@ void LCD_init(LCD *lcd)
     delayMs(5);
 }
 
-void LCD_scrollRight(LCD *lcd)
-{
-    LCD_writeCmd(lcd, 0x1F);
-}
-
-void LCD_scrollLeft(LCD *lcd)
-{
-    LCD_writeCmd(lcd, 0x18);
-}
-
 void LCD_createCustomChar(LCD *lcd, uint8_t location, const uint8_t bitmap[]) 
 {
     // If any location other than 0-7 is used then not valid so essentially clamp in this range
@@ -132,4 +122,10 @@ void LCD_setCursorPos(LCD *lcd, const uint8_t xPos, const uint8_t yPos)
     {
         LCD_writeCmd(lcd, 0x80 | (0x40 + xPos));
     }
+}
+
+void LCD_clearPos(LCD *lcd, const uint8_t xPos, const uint8_t yPos)
+{
+    LCD_setCursorPos(lcd, xPos, yPos);
+    LCD_writeData(lcd,0b00100000);
 }
